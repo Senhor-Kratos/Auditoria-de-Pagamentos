@@ -15,7 +15,7 @@ O script realiza 3 etapas principais:
    - Converte em um DataFrame estruturado.
 
 2. **Carregamento de Dados do Excel:**  
-   - Lê todas as planilhas de um arquivo `.xls` (exceto as abas 'Resumo' e 'Base').
+   - Lê todas as planilhas de um arquivo `.xls`
    - Limpa e formata as colunas de datas.
    - Consolida os dados num único DataFrame.
 
