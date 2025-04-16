@@ -1,125 +1,89 @@
+# -*- coding: utf-8 -*-
+"""Verificação de Vales: Comparação de Datas entre Texto e Excel.
+
+Este script verifica se todas as datas extraídas de um texto estão registradas em uma base Excel organizada por matrícula.
+
+Desenvolvido por: Leonardo Martins Cordeiro
+"""
+
 import pandas as pd
 import re
 
+# Simulação de dados extraídos do PDF
 texto = """
-
 000001 / JOHAN KOTARO 4
-11/02/2025 15:10
-12/02/2025 15:31
-13/02/2025 14:55
-15/02/2025 Afastamento Trabalhado
+11/02/2025
+12/02/2025 
+13/02/2025 
+15/02/2025 
 000003 / DEVYSON DIAS 3
-13/02/2025 15:16
-15/02/2025 15:08
-15/02/2025 Afastamento Trabalhado
+13/02/2025 
+15/02/2025 
+15/02/2025 
 000008 / GRAZI MARTINS 2
-10/02/2025 15:05
-16/02/2025 Afastamento Trabalhado
-000010 / LEONARDO MARTINS 2
-15/02/2025 15:17
-15/02/2025 Afastamento Trabalhado
+10/02/2025 
+16/02/2025 
+000010 / Leonardo Martins 2
+15/02/2025 
+15/02/2025 
 """
 
-# Regex para capturar Matrícula (formato: 000001 / Leonardo Martins)
-matriculas = re.findall(r'(\d{6}) / [A-Za-z\s]+', texto)
-
-# Regex para capturar as datas no formato dd/mm/aaaa
-datas = re.findall(r'\d{2}/\d{2}/\d{4}', texto)
-
-# Criar uma lista de dados para estruturação
+# Extração de matrículas e datas do texto
 dados_pdf = []
-
-# Variáveis para controle
 matricula_atual = None
 
-# Iterar pelas linhas do texto e associar datas
 for linha in texto.split('\n'):
-    # Verificar se a linha é uma matrícula
     matricula_match = re.match(r'(\d{6}) / [A-Za-z\s]+', linha)
     if matricula_match:
-        matricula_atual = matricula_match.group(1)  # Captura a matrícula
-        matricula_atual_4dig = matricula_atual[2:]  # Remove os dois primeiros dígitos para 4 dígitos
-
-    # Verificar se a linha contém uma data
+        matricula_atual = matricula_match.group(1)[2:]  # Usando apenas os 4 últimos dígitos
     data_match = re.match(r'(\d{2}/\d{2}/\d{4})', linha)
     if data_match and matricula_atual:
-        dados_pdf.append([matricula_atual_4dig, data_match.group(1)])  # Usar a matrícula formatada
+        dados_pdf.append([matricula_atual, data_match.group(1)])
 
-# Criar DataFrame do PDF
+# DataFrame do conteúdo extraído do texto
 df_pdf = pd.DataFrame(dados_pdf, columns=["Matrícula", "Data"])
-
-# Converter a coluna 'Data' para datetime
 df_pdf['Data'] = pd.to_datetime(df_pdf['Data'], format='%d/%m/%Y', errors='coerce')
-
-# Adicionar a coluna 'Índice' para lidar com múltiplas entradas no mesmo dia
 df_pdf['Índice'] = df_pdf.groupby(['Matrícula', 'Data']).cumcount()
 
-print("Dados do PDF:")
+print("📄 Dados do PDF extraído:")
 print(df_pdf)
 
-# Caminho do arquivo Excel
-arquivo_excel = 'Multiconvênio Motorista 10_02_2025 à 16_02_2025.xls'  # Substitua pelo caminho correto do seu arquivo Excel
-
-# Ler todas as planilhas do Excel
+# Caminho do arquivo Excel com dados de controle
+arquivo_excel = 'Multiconvênio Motorista 10_02_2025 à 16_02_2025.xls'
 excel = pd.ExcelFile(arquivo_excel)
 
-# Inicializar uma lista para armazenar os dados de todas as matrículas
 dados_matriculas = []
 
-# Iterar sobre todas as planilhas (exceto "Resumo" e "Base", que não contém dados de matrícula)
+# Processa cada planilha, exceto as de controle
 for sheet_name in excel.sheet_names:
-    if sheet_name not in ['Resumo', 'Base']:  # Verifica se a planilha não é 'Resumo' nem 'Base'
+    if sheet_name not in ['Resumo', 'Base']:
         try:
-            # Ler os dados da planilha de uma matrícula específica, pulando as primeiras 17 linhas
             df_matricula = pd.read_excel(arquivo_excel, sheet_name=sheet_name, skiprows=17)
-
-            # Adicionar a coluna de Matrícula
-            df_matricula['Matrícula'] = sheet_name  # Nome da planilha é a matrícula
-
-            # Selecionar apenas a coluna de data e a coluna de matrícula
-            df_matricula_dados = df_matricula[['DATA', 'Matrícula']]
-
-            # Renomear a coluna 'DATA' para 'Data'
-            df_matricula_dados = df_matricula_dados.rename(columns={'DATA': 'Data'})
-
-            # Converter a coluna 'Data' para datetime, invalidando qualquer valor não conversível
-            df_matricula_dados['Data'] = pd.to_datetime(df_matricula_dados['Data'], errors='coerce')
-
-            # Remover as linhas onde a data é inválida (NaT, Not a Time)
-            df_matricula_dados = df_matricula_dados.dropna(subset=['Data'])
-
-            # Adicionar os dados dessa matrícula à lista de dados
-            dados_matriculas.append(df_matricula_dados)
+            df_matricula['Matrícula'] = sheet_name
+            df_matricula = df_matricula.rename(columns={'DATA': 'Data'})
+            df_matricula['Data'] = pd.to_datetime(df_matricula['Data'], errors='coerce')
+            df_matricula = df_matricula.dropna(subset=['Data'])
+            dados_matriculas.append(df_matricula[['Data', 'Matrícula']])
         except Exception as e:
-            print(f"Erro ao processar a matrícula {sheet_name}: {e}")
+            print(f"⚠️ Erro ao processar a planilha {sheet_name}: {e}")
 
-# Concatenar os dados de todas as matrículas em um único DataFrame
+# Consolidação de todas as planilhas num DataFrame único
 df_completo = pd.concat(dados_matriculas, ignore_index=True)
-
-# Adicionar a coluna de índice temporário (cumcount) ao df_completo
 df_completo['Índice'] = df_completo.groupby(['Matrícula', 'Data']).cumcount()
 
-# Exibir as primeiras linhas do DataFrame resultante
+print("\n💾 Dados consolidados do Excel:")
 print(df_completo)
 
+# Função para comparar e listar registros faltantes
 def verificar_conteudo(df_pdf, df_completo):
-    # Fazer merge entre df_pdf e df_completo considerando 'Matrícula', 'Data' e 'Índice'
-    merged = df_pdf.merge(
-        df_completo,
-        how='left',
-        on=['Matrícula', 'Data', 'Índice'],
-        indicator=True
-    )
+    merged = df_pdf.merge(df_completo, on=['Matrícula', 'Data', 'Índice'], how='left', indicator=True)
+    apenas_no_pdf = merged[merged['_merge'] == 'left_only']
 
-    # Filtrar as linhas que estão apenas no df_pdf
-    apenas_no_df_pdf = merged[merged['_merge'] == 'left_only']
-
-    if apenas_no_df_pdf.empty:
-        print("Todos os dados do DataFrame PDF estão contidos no DataFrame Completo.")
+    if apenas_no_pdf.empty:
+        print("\n✅ Todos os registros do PDF foram encontrados no Excel.")
     else:
-        print("Os seguintes dados do DataFrame PDF não estão contidos no DataFrame Completo:")
-        print(apenas_no_df_pdf[['Matrícula', 'Data', 'Índice']])
+        print("\n❌ Registros presentes no PDF que não constam no Excel:")
+        print(apenas_no_pdf[['Matrícula', 'Data', 'Índice']])
 
-# Chamando a função para verificar os dados
+# Executa a verificação
 verificar_conteudo(df_pdf, df_completo)
-
