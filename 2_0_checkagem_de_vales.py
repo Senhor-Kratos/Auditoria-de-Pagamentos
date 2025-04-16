@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Verificação de Vales: Comparação de Datas entre Texto e Excel.
-
-Este script verifica se todas as datas extraídas de um texto estão registradas em uma base Excel organizada por matrícula.
-
-Desenvolvido por: Leonardo Martins Cordeiro
-"""
-
 import pandas as pd
 import re
 
@@ -35,7 +27,7 @@ matricula_atual = None
 for linha in texto.split('\n'):
     matricula_match = re.match(r'(\d{6}) / [A-Za-z\s]+', linha)
     if matricula_match:
-        matricula_atual = matricula_match.group(1)[2:]  # Usando apenas os 4 últimos dígitos
+        matricula_atual = matricula_match.group(1)[2:]
     data_match = re.match(r'(\d{2}/\d{2}/\d{4})', linha)
     if data_match and matricula_atual:
         dados_pdf.append([matricula_atual, data_match.group(1)])
