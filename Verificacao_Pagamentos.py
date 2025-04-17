@@ -41,14 +41,14 @@ print("📄 Dados do PDF extraído:")
 print(df_pdf)
 
 # Caminho do arquivo Excel com dados de controle
-arquivo_excel = 'Multiconvênio Motorista 10_02_2025 à 16_02_2025.xls'
+arquivo_excel = 'Dados_Benefícios_Funcionários.xls'
 excel = pd.ExcelFile(arquivo_excel)
 
 dados_matriculas = []
 
 # Processa cada planilha, exceto as de controle
 for sheet_name in excel.sheet_names:
-    if sheet_name not in ['Resumo', 'Base']:
+    if sheet_name not in ['Resumo']:
         try:
             df_matricula = pd.read_excel(arquivo_excel, sheet_name=sheet_name, skiprows=17)
             df_matricula['Matrícula'] = sheet_name
