@@ -2,7 +2,6 @@
 
 Este projeto foi criado para automatizar a conferência de registros de vales de pagamento.  
 O código compara datas extraídas de textos (simulando dados de um PDF) com registros oficiais armazenados em planilhas Excel, garantindo que todos os lançamentos estejam corretos e correspondam.
----
 
 ## 💡 Como Funciona
 
