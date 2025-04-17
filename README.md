@@ -1,7 +1,7 @@
 # Verificação de Vales — Auditoria de Pagamentos com Python 🧾
 
 <p align="justify">
-Este projeto foi criado para automatizar a conferência de registros de vales de pagamento, comparando dados extraídos de relatórios de texto (PDFs) com planilhas Excel. Focado em reforçar a consistência de dados em processos administrativos e financeiros de forma simples e eficiente com Python.
+Este projeto foi criado para automatizar a conferência de registros pagamentos de benefícios, comparando dados extraídos de relatórios de texto (PDFs) com planilhas Excel. Focado em reforçar a consistência de dados em processos administrativos e financeiros de forma simples e eficiente com Python.
 </p>
 
 ## 💡 Como Funciona
